@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Água em Dia — Painel de Controle e Backend Spring Boot</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Cabeçalho -->
+        <header class="cabecalho">
+            <div class="marca">
+                <div class="marca-icone">
+                    <svg viewBox="0 0 200 240">
+                        <path d="M100 231 C61 180 22 141 22 101 a78 78 0 1 1 156 0 c0 40 -39 79 -78 130 Z" />
+                    </svg>
+                </div>
+                <div class="marca-info">
+                    <h1>Água em Dia — Monitoramento</h1>
+                    <p>API REST Spring Boot 3.3.5 &amp; Banco H2 em Memória</p>
+                </div>
+            </div>
+            <div class="links-rapidos">
+                <a href="/h2-console" target="_blank" class="btn-link destaque">Console H2 (SQL)</a>
+                <a href="/api/vazamentos" target="_blank" class="btn-link">JSON Vazamentos</a>
+                <a href="/api/relatos" target="_blank" class="btn-link">JSON Relatos</a>
+                <a href="/api/usuarios" target="_blank" class="btn-link">JSON Usuários</a>
+                <a href="prototipo.html" target="_blank" class="btn-link">Ver Protótipo Visual</a>
+            </div>
+        </header>
+
+        <!-- Métricas Rápidas / Estatísticas -->
+        <section class="grid-stats">
+            <div class="card-stat">
+                <span>Total de Vazamentos</span>
+                <strong id="statTotalVazamentos">0</strong>
+            </div>
+            <div class="card-stat aberto">
+                <span>Vazamentos Abertos</span>
+                <strong id="statAbertos">0</strong>
+            </div>
+            <div class="card-stat manutencao">
+                <span>Em Manutenção</span>
+                <strong id="statManutencao">0</strong>
+            </div>
+            <div class="card-stat concluido">
+                <span>Reparos Concluídos</span>
+                <strong id="statConcluidos">0</strong>
+            </div>
+            <div class="card-stat">
+                <span>Relatos de Cidadãos</span>
+                <strong id="statTotalRelatos">0</strong>
+            </div>
+        </section>
+
+        <!-- Formulários de Ação Direta -->
+        <section class="grid-formularios">
+            <!-- Formulário: Registrar Novo Relato -->
+            <div class="painel">
+                <h2 class="painel-titulo">💧 Registrar Novo Relato de Vazamento</h2>
+                <form id="formRelato" class="formulario">
+                    <div class="form-linha">
+                        <div class="form-grupo">
+                            <label for="relatoUsuario">Cidadão / Usuário</label>
+                            <select id="relatoUsuario" required>
+                                <option value="">Carregando usuários...</option>
+                            </select>
+                        </div>
+                        <div class="form-grupo">
+                            <label for="relatoBairro">Bairro (Recife)</label>
+                            <select id="relatoBairro" required>
+                                <option value="Recife Antigo">Recife Antigo</option>
+                                <option value="Santo Amaro" selected>Santo Amaro</option>
+                                <option value="Boa Vista">Boa Vista</option>
+                                <option value="Madalena">Madalena</option>
+                                <option value="Torre">Torre</option>
+                                <option value="Casa Amarela">Casa Amarela</option>
+                                <option value="Boa Viagem">Boa Viagem</option>
+                                <option value="Várzea">Várzea</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-linha">
+                        <div class="form-grupo">
+                            <label for="relatoTipo">Tipo da Ocorrência</label>
+                            <select id="relatoTipo" required>
+                                <option value="ADUTORA">Adutora (via principal)</option>
+                                <option value="REDE" selected>Rede da rua</option>
+                                <option value="RAMAL">Cavalete / Ramal da casa</option>
+                                <option value="CLANDESTINA">Ligação clandestina</option>
+                                <option value="DESPERDICIO">Desperdício visível</option>
+                            </select>
+                        </div>
+                        <div class="form-grupo">
+                            <label for="relatoPorte">Intensidade / Porte</label>
+                            <select id="relatoPorte" required>
+                                <option value="GOTEJAMENTO">Gotejamento contínuo</option>
+                                <option value="FIO">Fio d'água na calçada</option>
+                                <option value="MEDIO" selected>Jato médio (empoça rua)</option>
+                                <option value="FORTE">Jato forte (corre na sarjeta)</option>
+                                <option value="JORRO">Jorro / gêiser</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-grupo">
+                        <label for="relatoReferencia">Endereço / Ponto de Referência</label>
+                        <input type="text" id="relatoReferencia" placeholder="Ex: Av. Conde da Boa Vista, próx. ao nº 500" required>
+                    </div>
+
+                    <div class="form-grupo">
+                        <label for="relatoDescricao">Descrição do Problema</label>
+                        <textarea id="relatoDescricao" rows="2" placeholder="Descreva os detalhes observados..." required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-acao">Enviar Relato para o Backend</button>
+                </form>
+            </div>
+
+            <!-- Formulário: Cadastrar Cidadão / Usuário -->
+            <div class="painel">
+                <h2 class="painel-titulo">👤 Cadastrar Novo Usuário</h2>
+                <form id="formUsuario" class="formulario">
+                    <div class="form-grupo">
+                        <label for="usuarioNome">Nome Completo</label>
+                        <input type="text" id="usuarioNome" placeholder="Ex: Juliana Mendes" required>
+                    </div>
+
+                    <div class="form-linha">
+                        <div class="form-grupo">
+                            <label for="usuarioEmail">E-mail (Único)</label>
+                            <input type="email" id="usuarioEmail" placeholder="juliana@email.com" required>
+                        </div>
+                        <div class="form-grupo">
+                            <label for="usuarioTelefone">Telefone / WhatsApp</label>
+                            <input type="text" id="usuarioTelefone" placeholder="(81) 98888-7766" required>
+                        </div>
+                    </div>
+
+                    <div class="form-linha">
+                        <div class="form-grupo">
+                            <label for="usuarioSenha">Senha</label>
+                            <input type="password" id="usuarioSenha" placeholder="Mínimo 6 caracteres" required>
+                        </div>
+                        <div class="form-grupo">
+                            <label for="usuarioSituacao">Situação</label>
+                            <select id="usuarioSituacao">
+                                <option value="ATIVO" selected>ATIVO</option>
+                                <option value="INATIVO">INATIVO</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-acao">Salvar Usuário (BCrypt)</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Tabela: Ocorrências de Vazamentos -->
+        <section class="secao-tabela">
+            <div class="tabela-cabecalho">
+                <h2>Ocorrências de Vazamentos no Sistema</h2>
+                <button class="btn-link" onclick="carregarVazamentos()">↻ Atualizar Vazamentos</button>
+            </div>
+            <div class="tabela-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Bairro</th>
+                            <th>Tipo</th>
+                            <th>Porte</th>
+                            <th>Vazão Estimada</th>
+                            <th>Status Atual</th>
+                            <th>Primeiro Relato</th>
+                            <th>Ação / Alterar Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaVazamentos">
+                        <tr><td colspan="8" style="text-align:center;">Carregando ocorrências...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Tabela: Relatos Enviados pelos Cidadãos -->
+        <section class="secao-tabela">
+            <div class="tabela-cabecalho">
+                <h2>Relatos Enviados por Cidadãos</h2>
+                <button class="btn-link" onclick="carregarRelatos()">↻ Atualizar Relatos</button>
+            </div>
+            <div class="tabela-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Protocolo</th>
+                            <th>Cidadão</th>
+                            <th>Bairro / Local</th>
+                            <th>Tipo</th>
+                            <th>Descrição</th>
+                            <th>Data de Envio</th>
+                            <th>ID Vazamento</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaRelatos">
+                        <tr><td colspan="7" style="text-align:center;">Carregando relatos...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <!-- Toast de Notificação -->
+    <div id="toast" class="alerta-flutuante">Mensagem</div>
+
+    <script src="app.js"></script>
+</body>
+</html>
